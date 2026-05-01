@@ -1,0 +1,15 @@
+.navbar {
+    position: relative;
+    z-index: 1;
+}
+
+.navbar .nav-link {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+     .nav-link {
+     
+    }
+}
