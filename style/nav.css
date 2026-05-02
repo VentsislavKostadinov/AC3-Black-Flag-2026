@@ -1,9 +1,13 @@
 .navbar {
     position: relative;
-    z-index: 1;
+    z-index: 1000;
 }
 
 .navbar .nav-link {
     font-size: 1.5em;
     font-weight: 600;
+}
+
+.navbar .dropdown-menu {
+    z-index: 1100;
 }

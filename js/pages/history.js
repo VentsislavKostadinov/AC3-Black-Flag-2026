@@ -2,7 +2,7 @@ import { getStore } from "../store.js";
 
 export const renderHistoryPage = () => {
   const store = getStore();
-  const { history } = store;
+  const { history } = store.navigation?.find((item) => item.history) || {};
 
   return `
     <section>

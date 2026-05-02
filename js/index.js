@@ -6,18 +6,66 @@ const app = document.getElementById('app');
 
 // function to create new nav items
 const renderNavLinks = () => {
+    const store = getStore();
+    const navigationData = store.navigation ?? [];
     const navFragment = document.createDocumentFragment();
+
+    const getDropdownItems = (dropdownKey) => {
+        const section = navigationData.find((item) => item[dropdownKey]);
+        return section?.[dropdownKey] ?? [];
+    };
+
+    const createBaseLink = (route, linkLabel, className = 'nav-link') => {
+        const linkElement = document.createElement('a');
+        linkElement.href = `#${route}`;
+        linkElement.textContent = linkLabel;
+        linkElement.className = className;
+        linkElement.setAttribute('data-route', route);
+        return linkElement;
+    };
+
     Object.keys(routes).forEach((route) => {
-        const { linkLabel } = routes[route];
+        const { linkLabel, dropdownKey, dropdownItemLabelKey } = routes[route];
 
         const navItem = document.createElement('li');
         navItem.className = 'nav-item';
 
-        const linkElement = document.createElement('a');
-        linkElement.href = `#${route}`;
-        linkElement.textContent = linkLabel;
-        linkElement.className = 'nav-link';
-        linkElement.setAttribute('data-route', route);
+        if (dropdownKey && dropdownItemLabelKey) {
+            navItem.classList.add('dropdown');
+
+            const toggleLink = createBaseLink(route, linkLabel, 'nav-link dropdown-toggle');
+            toggleLink.setAttribute('role', 'button');
+            toggleLink.setAttribute('data-bs-toggle', 'dropdown');
+            toggleLink.setAttribute('aria-expanded', 'false');
+
+            const dropdownMenu = document.createElement('ul');
+            dropdownMenu.className = 'dropdown-menu';
+
+            const dropdownItems = getDropdownItems(dropdownKey);
+            dropdownItems.forEach((item) => {
+                const label = item[dropdownItemLabelKey];
+                if (!label) {
+                    return;
+                }
+
+                const menuItem = document.createElement('li');
+                const menuLink = createBaseLink(route, label, 'dropdown-item');
+
+                if (route === '/characters' || route === '/cities') {
+                    menuLink.href = `#${route}?selected=${encodeURIComponent(label)}`;
+                }
+
+                menuItem.appendChild(menuLink);
+                dropdownMenu.appendChild(menuItem);
+            });
+
+            navItem.appendChild(toggleLink);
+            navItem.appendChild(dropdownMenu);
+            navFragment.appendChild(navItem);
+            return;
+        }
+
+        const linkElement = createBaseLink(route, linkLabel);
 
         navItem.appendChild(linkElement);
         navFragment.appendChild(navItem);
@@ -38,7 +86,8 @@ const updateActiveNavLink = (route) => {
 const getCurrentRoute = () => {
     const hashRoute = location.hash.replace(/^#/, '');
     if (!hashRoute) return '/';
-    return hashRoute.startsWith('/') ? hashRoute : `/${hashRoute}`;
+    const [routePath] = hashRoute.split('?');
+    return routePath.startsWith('/') ? routePath : `/${routePath}`;
 };
 
 const getExternalPageContent = async (path) => {
@@ -92,8 +141,6 @@ const renderInitialPage = () => {
 const bootup = async () => {
     try {
         await initStore();
-        const store = getStore();
-        console.log('Store ready:', store);
 
         renderNavLinks();
         registerBrowserBackAndForth();
