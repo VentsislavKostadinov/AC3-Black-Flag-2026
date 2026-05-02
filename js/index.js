@@ -1,4 +1,5 @@
-import { routes } from '../routes.js';
+import { routes } from './routes.js';
+import { initStore, getStore } from './store.js';
 
 const navLinks = document.getElementById('navLinks');
 const app = document.getElementById('app');
@@ -54,6 +55,11 @@ const renderContent = async route => {
     const routeConfig = routes[safeRoute];
     updateActiveNavLink(safeRoute);
 
+    if (routeConfig.render) {
+        app.innerHTML = routeConfig.render();
+        return;
+    }
+
     if (routeConfig.contentFile) {
         try {
             app.innerHTML = await getExternalPageContent(routeConfig.contentFile);
@@ -83,9 +89,19 @@ const renderInitialPage = () => {
     void renderContent(route);
 };
 
-(function bootup() {
-    renderNavLinks();
-    registerBrowserBackAndForth();
-    renderInitialPage();
-})();
+const bootup = async () => {
+    try {
+        await initStore();
+        const store = getStore();
+        console.log('Store ready:', store);
+
+        renderNavLinks();
+        registerBrowserBackAndForth();
+        renderInitialPage();
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+    }
+};
+
+void bootup();
 
